@@ -1,4 +1,4 @@
-import db from "../database.js";
+import db from "../Database/database.js";
 
 async function CreateUser(email, passwordHash, username, picture) {
   return db.query(
@@ -11,20 +11,20 @@ async function FindUser(email) {
   return db.query(`SELECT * FROM users WHERE email = $1;`, [email]);
 }
 
-async function Login(token, userid) {
-  return db.query(`INSERT INTO sessions (token, userid) VALUES ($1, $2)`, [
+async function Login(token, userId) {
+  return db.query(`INSERT INTO sessions (token, "userId") VALUES ($1, $2)`, [
     token,
-    userid,
+    userId,
   ]);
 }
 
 async function FindToken(token) {
   return db.query(
     `SELECT
-  *
-FROM sessions
-WHERE token = $1
-  AND active = TRUE;`,
+        *
+      FROM sessions
+      WHERE token = $1
+        AND active = TRUE;`,
     [token]
   );
 }
