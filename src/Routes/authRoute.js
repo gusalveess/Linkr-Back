@@ -8,6 +8,9 @@ const authRouter = Router();
 
 authRouter.post("/signup", schemaValidationMiddleware(signUpSchema), SignUp);
 authRouter.post("/signin", schemaValidationMiddleware(signInSchema), SignIn);
-authRouter.post("/logout", validateSessionByToken, Logout);
+
+authRouter.use(validateSessionByToken);
+
+authRouter.post("/logout", Logout);
 
 export default authRouter;

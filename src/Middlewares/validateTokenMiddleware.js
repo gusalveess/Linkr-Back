@@ -9,7 +9,7 @@ async function validateSessionByToken(req, res, next) {
 	}
 
 	try {
-		jwt.verify(token, process.env.JWT_SECRET);
+		const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
 		const { rows: session } = await authRepository.FindToken(token);
 
@@ -19,6 +19,7 @@ async function validateSessionByToken(req, res, next) {
 
 		res.locals.token = token;
 		res.locals.session = session;
+		res.locals.user = decoded.user;
 
 		next();
 	} catch (error) {
