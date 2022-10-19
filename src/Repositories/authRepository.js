@@ -12,7 +12,7 @@ async function FindUser(email) {
 }
 
 async function Login(token, userid) {
-  return db.query(`INSERT INTO sessions (token, userid) VALUES ($1, $2)`, [
+  return db.query(`INSERT INTO sessions (token, "userId") VALUES ($1, $2)`, [
     token,
     userid,
   ]);

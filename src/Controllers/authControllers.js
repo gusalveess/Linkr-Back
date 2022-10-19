@@ -5,7 +5,7 @@ import jwt from "jsonwebtoken";
 export async function SignUp(req, res) {
 
     const {email, password, username, picture} = req.body
-    const {rows: user} = authRepository.FindUser(email);
+    const {rows: user} = await authRepository.FindUser(email);
 
     try {
 
@@ -13,13 +13,13 @@ export async function SignUp(req, res) {
             return res.status(422).send("Preencha os campos em vazios!");
           }
 
-        if(user.length === 0) {
-           return res.sendStatus(409).send('Já existe um usuário cadastrado com esse e-mail.')
+        if(user.length > 0) {
+           return res.status(409).send('Já existe um usuário cadastrado com esse e-mail.')
         }
 
         const passwordHash = bcrypt.hashSync(password, 13);
 
-        authRepository.CreateUser(email, passwordHash, username, picture);
+        await authRepository.CreateUser(email, passwordHash, username, picture);
 
         res.sendStatus(201);
 
@@ -35,7 +35,6 @@ export async function SignIn(req, res) {
    
     const {email, password} = req.body;
     const key = process.env.JWT_SECRET;
-    let result;
 
     try {
 
@@ -57,7 +56,7 @@ export async function SignIn(req, res) {
             return res.status(401).send("Senha incorreta.");
           }
 
-        authRepository.Login(token, user[0].id)
+        await authRepository.Login(token, user[0].id)
 
         res.status(200).send(sendToken);
 
