@@ -1,13 +1,13 @@
 import db from "../database.js";
 
-async function createUser(email, passwordHash, username, picture) {
+async function CreateUser(email, passwordHash, username, picture) {
   return db.query(
     `INSERT INTO users (username, email, password, picture) VALUES ($1, $2, $3, $4)`,
     [username, email, passwordHash, picture]
   );
 }
 
-async function findUser(email) {
+async function FindUser(email) {
   return db.query(`SELECT * FROM users WHERE email = $1;`, [email]);
 }
 
@@ -35,4 +35,4 @@ async function Finish(token) {
   ]);
 }
 
-export { createUser, findUser, Login, FindToken, Finish };
+export { CreateUser, FindUser, Login, FindToken, Finish };

@@ -1,10 +1,11 @@
-import * as userRepository from "../Repositories/userRepository.js";
+import * as authRepository from "../Repositories/authRepository.js";
 import bcrypt from 'bcrypt';
 import jwt from "jsonwebtoken";
 
 export async function SignUp(req, res) {
 
     const {email, password, username, picture} = req.body
+    const {rows: user} = authRepository.FindUser(email);
 
     try {
 
@@ -12,13 +13,13 @@ export async function SignUp(req, res) {
             return res.status(422).send("Preencha os campos em vazios!");
           }
 
-        if(userRepository.findUser.length === 0) {
+        if(user.length === 0) {
            return res.sendStatus(409).send('Já existe um usuário cadastrado com esse e-mail.')
         }
 
         const passwordHash = bcrypt.hashSync(password, 13);
 
-        userRepository.createUser(email, passwordHash, username, picture);
+        authRepository.CreateUser(email, passwordHash, username, picture);
 
         res.sendStatus(201);
 
@@ -38,7 +39,7 @@ export async function SignIn(req, res) {
 
     try {
 
-        const {rows: user} = await userRepository.findUser(email);
+        const {rows: user} = await authRepository.FindUser(email);
         const token = jwt.sign(user[0].id, key);
         const sendToken = {
             token: token,
@@ -56,7 +57,7 @@ export async function SignIn(req, res) {
             return res.status(401).send("Senha incorreta.");
           }
 
-        userRepository.Login(token, user[0].id)
+        authRepository.Login(token, user[0].id)
 
         res.status(200).send(sendToken);
 
@@ -72,7 +73,7 @@ export async function Logout(req, res) {
 
     try {
 
-        const {rows: session} = await userRepository.FindToken(token)
+        const {rows: session} = await authRepository.FindToken(token)
         console.log(session)
 
         if(session.length === 0) {
@@ -83,7 +84,7 @@ export async function Logout(req, res) {
             return res.status(401).send("Sem Token de acesso.");
           }
 
-        await userRepository.Finish(session[0].token);
+        await authRepository.Finish(session[0].token);
         
         res.status(200);
     }
