@@ -4,13 +4,11 @@ import jwt from "jsonwebtoken";
 
 export async function SignUp(req, res) {
 	const { email, password, username, picture } = req.body;
-	const { rows: user } = authRepository.FindUser(email);
+	const { rows: user } = await authRepository.FindUser(email);
 
 	try {
-		if (user.length === 0) {
-			return res
-				.sendStatus(409)
-				.send("Já existe um usuário cadastrado com esse e-mail.");
+		if (user.length > 0) {
+			return res.status(409).send("Usuário já existe.");
 		}
 
 		const passwordHash = bcrypt.hashSync(password, 13);
@@ -30,17 +28,18 @@ export async function SignIn(req, res) {
 
 	try {
 		const { rows: user } = await authRepository.FindUser(email);
-		const token = jwt.sign(user[0].id, key);
+
+		if (user.length === 0) {
+			return res.status(401).send("Usuário incompátivel ou inexistente.");
+		}
+
+		const token = jwt.sign({user:user[0].id}, key);
 		const sendToken = {
 			token: token,
 		};
 
-		if (user.length === 0) {
-			return res.status(401).send("Usuário incompátivel ou inexistente");
-		}
-
 		if (bcrypt.compareSync(password, user[0].password) == false) {
-			return res.status(401).send("Senha incorreta.");
+			return res.status(401).send("Usuário incompatível ou inexistente.");
 		}
 
 		authRepository.Login(token, user[0].id);
@@ -53,22 +52,12 @@ export async function SignIn(req, res) {
 }
 
 export async function Logout(req, res) {
-	const token = req.headers.authorization?.replace("Bearer ", "");
+	const { session } = res.locals;
 
 	try {
-		const { rows: session } = await authRepository.FindToken(token);
-
-		if (session.length === 0) {
-			return res.status(401).send("Sessão não encontrada");
-		}
-
-		if (!token) {
-			return res.status(401).send("Sem Token de acesso.");
-		}
-
 		await authRepository.Finish(session[0].token);
 
-		res.status(200);
+		res.sendStatus(200);
 	} catch (error) {
 		console.log(error);
 		res.sendStatus(500);
