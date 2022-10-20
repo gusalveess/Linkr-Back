@@ -60,6 +60,7 @@ async function GetLikedBy({ posts, user }) {
 
 		post.likedByUser = !!post.likedByUser;
 		post.likedBy = likedBy;
+		post.owner = post.owner === user;
 	}
 }
 
@@ -67,7 +68,7 @@ async function ListPosts({ user }) {
 	const result = await db.query(
 		`SELECT 
 			posts.id, posts.url, posts.description,
-			users.username AS from, users.picture AS "userImage",
+			users.username AS from, users.picture AS "userImage", users.id AS owner,
 			"likesTotal".count AS "likesTotal",
 			"likesFromUser".count AS "likedByUser"
 		FROM posts
@@ -99,7 +100,8 @@ async function ListPosts({ user }) {
 			users.username,
 			"userImage",
 			"likesTotal".count,
-			"likesFromUser".count
+			"likesFromUser".count,
+			owner
 		ORDER BY posts.id DESC
 		LIMIT 20;`,
 		[user]
