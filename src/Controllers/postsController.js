@@ -25,3 +25,16 @@ export async function Publish(req, res) {
 		res.sendStatus(500);
 	}
 }
+
+export async function ListPosts(req, res) {
+	const { user } = res.locals;
+
+	try {
+		const posts = (await postsRepository.ListPosts({ user })).rows;
+
+		res.status(200).send(posts);
+	} catch (error) {
+		console.log(error);
+		res.sendStatus(500);
+	}
+}
