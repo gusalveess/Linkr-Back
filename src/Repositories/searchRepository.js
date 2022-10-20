@@ -1,10 +1,18 @@
 import db from "../Database/database.js";
 
-async function searchUser({id}){
-    const userSelected = await db.query(`
-    SELECT * FROM posts
-    WHERE "userId" = $1
+async function search(id){
+
+   return db.query(`
+    SELECT users.username, posts.url,posts.description FROM users
+    JOIN posts ON users.id = posts."userId"
+    WHERE users.id = $1
     `,[id])
 
-    return userSelected
+   
+} 
+
+const searchUser ={
+    search
 }
+
+export {searchUser}
