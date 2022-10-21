@@ -38,3 +38,29 @@ export async function ListPosts(req, res) {
 		res.sendStatus(500);
 	}
 }
+
+export async function DeletePost(req, res) {
+	const { id } = req.params;
+	const { user } = res.locals;
+
+	if (isNaN(id)) return res.sendStatus(400);
+
+	try {
+		const post = (await postsRepository.SearchPost(id)).rows[0];
+
+		if (!post) return res.sendStatus(404);
+
+		if (post.userId !== user) return res.sendStatus(401);
+
+		const deletedPost = (await postsRepository.DeletePost(id)).rowCount;
+
+		if (deletedPost === 0) {
+			return res.status(400).send("Não foi possível excluir o post.");
+		}
+
+		res.sendStatus(204);
+	} catch (error) {
+		console.log(error);
+		res.sendStatus(500);
+	}
+}
