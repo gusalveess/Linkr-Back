@@ -112,4 +112,18 @@ async function ListPosts({ user }) {
 	return result;
 }
 
-export { CreatePost, ListPosts };
+async function SearchPost(id) {
+	return db.query(`SELECT * FROM posts WHERE id = $1;`, [id]);
+}
+
+async function DeletePostLikes(id) {
+	return db.query(`DELETE FROM likes WHERE "postId" = $1;`, [id]);
+}
+
+async function DeletePost(id) {
+	await DeletePostLikes(id);
+
+	return db.query(`DELETE FROM posts WHERE id = $1;`, [id]);
+}
+
+export { CreatePost, ListPosts, SearchPost, DeletePost };
