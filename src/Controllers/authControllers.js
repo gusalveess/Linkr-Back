@@ -33,10 +33,7 @@ export async function SignIn(req, res) {
 			return res.status(401).send("Usuário incompátivel ou inexistente.");
 		}
 
-		const token = jwt.sign({user:user[0].id}, key);
-		const sendToken = {
-			token: token,
-		};
+		const token = jwt.sign({ user: user[0].id }, key);
 
 		if (bcrypt.compareSync(password, user[0].password) == false) {
 			return res.status(401).send("Usuário incompatível ou inexistente.");
@@ -44,7 +41,7 @@ export async function SignIn(req, res) {
 
 		authRepository.Login(token, user[0].id);
 
-		res.status(200).send(sendToken);
+		res.status(200).send({ userImage: user[0].picture, token });
 	} catch (error) {
 		console.log(error);
 		res.sendStatus(500);
