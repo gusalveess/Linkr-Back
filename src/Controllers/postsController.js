@@ -67,10 +67,14 @@ export async function DeletePost(req, res) {
 
 export async function EditPost(req, res) {
 	const { id } = req.params;
-	const { description } = req.body;
+	const { description, tags } = req.body;
 	const { user } = res.locals;
 
 	if (isNaN(id)) return res.sendStatus(400);
+
+	if (!Array.isArray(tags)) {
+		return res.status(400).send("Tags no formato errado.");
+	}
 
 	try {
 		const post = (await postsRepository.SearchPost(id)).rows[0];
@@ -79,7 +83,7 @@ export async function EditPost(req, res) {
 
 		if (post.userId !== user) return res.sendStatus(401);
 
-		const editedPost = (await postsRepository.EditPost({ id, description }))
+		const editedPost = (await postsRepository.EditPost({ tags, id, description }))
 			.rowCount;
 
 		if (editedPost === 0) {
