@@ -83,14 +83,31 @@ export async function EditPost(req, res) {
 
 		if (post.userId !== user) return res.sendStatus(401);
 
-		const editedPost = (await postsRepository.EditPost({ tags, id, description }))
-			.rowCount;
+		const editedPost = (
+			await postsRepository.EditPost({ tags, id, description })
+		).rowCount;
 
 		if (editedPost === 0) {
 			return res.status(400).send("Não foi possível editar o post.");
 		}
 
 		res.sendStatus(204);
+	} catch (error) {
+		console.log(error);
+		res.sendStatus(500);
+	}
+}
+
+export async function ListPostsWithHashtag(req, res) {
+	const { hashtag } = req.params;
+	const { user } = res.locals;
+
+	try {
+		const posts = (
+			await postsRepository.ListPostsWithHashtag({ user, hashtag })
+		).rows;
+
+		res.status(200).send(posts);
 	} catch (error) {
 		console.log(error);
 		res.sendStatus(500);

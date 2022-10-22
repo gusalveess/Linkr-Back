@@ -54,6 +54,35 @@ async function CreatePost({ user, url, description, tags }) {
 	return result;
 }
 
+async function SearchPost(id) {
+	return db.query(`SELECT * FROM posts WHERE id = $1;`, [id]);
+}
+
+async function DeletePostLikes(id) {
+	return db.query(`DELETE FROM likes WHERE "postId" = $1;`, [id]);
+}
+
+async function DeletePostHashtags(postId) {
+	return db.query(`DELETE FROM "postHashtags" WHERE "postId" = $1;`, [postId]);
+}
+
+async function DeletePost(id) {
+	await DeletePostLikes(id);
+	await DeletePostHashtags(id);
+
+	return db.query(`DELETE FROM posts WHERE id = $1;`, [id]);
+}
+
+async function EditPost({ tags, id, description }) {
+	await DeletePostHashtags(id);
+	await CreatePostHashtags({ tags, postId: id });
+
+	return db.query(`UPDATE posts SET description = $1 WHERE id = $2;`, [
+		description,
+		id,
+	]);
+}
+
 async function GetLikedBy({ posts, user }) {
 	for (let i = 0; i < posts.length; i++) {
 		const post = posts[i];
@@ -136,33 +165,63 @@ async function ListPosts({ user }) {
 	return result;
 }
 
-async function SearchPost(id) {
-	return db.query(`SELECT * FROM posts WHERE id = $1;`, [id]);
+async function ListPostsWithHashtag({ user, hashtag }) {
+	const result = await db.query(
+		`SELECT 
+			posts.id, posts.url, posts.description,
+			users.username AS from, users.picture AS "userImage", users.id AS owner,
+			"likesTotal".count AS "likesTotal",
+			"likesFromUser".count AS "likedByUser"
+		FROM posts
+		JOIN users
+			ON posts."userId" = users.id
+		LEFT JOIN
+				(SELECT 
+					COUNT(likes."postId"),
+				 	posts.id
+				FROM posts
+				LEFT JOIN likes
+					ON likes."postId" = posts.id
+				 GROUP BY posts.id
+				) "likesTotal"
+			ON "likesTotal".id = posts.id
+		LEFT JOIN
+				(SELECT 
+					COUNT(posts.id),
+				 	posts.id
+				FROM likes
+				 JOIN posts
+					ON likes."postId" = posts.id
+				 WHERE likes."byUserId" = $1
+				 GROUP BY posts.id, likes."byUserId"
+				) "likesFromUser"
+			ON "likesFromUser".id = posts.id
+		LEFT JOIN "postHashtags"
+			ON posts.id = "postHashtags"."postId"
+		LEFT JOIN hashtags
+			ON hashtags.id = "postHashtags"."hashtagId"
+		WHERE hashtags.name = $2
+		GROUP BY
+			posts.id,
+			users.username,
+			"userImage",
+			"likesTotal".count,
+			"likesFromUser".count,
+			owner
+		ORDER BY posts.id DESC;`,
+		[user, hashtag]
+	);
+
+	await GetLikedBy({ posts: result.rows, user });
+
+	return result;
 }
 
-async function DeletePostLikes(id) {
-	return db.query(`DELETE FROM likes WHERE "postId" = $1;`, [id]);
-}
-
-async function DeletePostHashtags(postId) {
-	return db.query(`DELETE FROM "postHashtags" WHERE "postId" = $1;`, [postId]);
-}
-
-async function DeletePost(id) {
-	await DeletePostLikes(id);
-	await DeletePostHashtags(id);
-
-	return db.query(`DELETE FROM posts WHERE id = $1;`, [id]);
-}
-
-async function EditPost({ tags, id, description }) {
-	await DeletePostHashtags(id);
-	await CreatePostHashtags({ tags, postId: id });
-
-	return db.query(`UPDATE posts SET description = $1 WHERE id = $2;`, [
-		description,
-		id,
-	]);
-}
-
-export { CreatePost, ListPosts, SearchPost, DeletePost, EditPost };
+export {
+	CreatePost,
+	ListPosts,
+	SearchPost,
+	DeletePost,
+	EditPost,
+	ListPostsWithHashtag,
+};
