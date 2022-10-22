@@ -126,4 +126,11 @@ async function DeletePost(id) {
 	return db.query(`DELETE FROM posts WHERE id = $1;`, [id]);
 }
 
-export { CreatePost, ListPosts, SearchPost, DeletePost };
+async function EditPost({ id, description }) {
+	return db.query(`UPDATE posts SET description = $1 WHERE id = $2;`, [
+		description,
+		id,
+	]);
+}
+
+export { CreatePost, ListPosts, SearchPost, DeletePost, EditPost };
