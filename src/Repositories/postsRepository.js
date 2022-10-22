@@ -1,21 +1,38 @@
 import db from "../Database/database.js";
 
-async function CreatePostHashtags({ user, tags }) {
-	const post = (
-		await db.query(
-			`SELECT id FROM posts WHERE "userId" = $1 ORDER BY id DESC;`,
-			[user]
-		)
-	).rows[0].id;
+async function GetHashtag(tag) {
+	return db.query(`SELECT id FROM hashtags WHERE name = $1;`, [tag]);
+}
 
+async function CreateHashtag(tag) {
+	await db.query(`INSERT INTO hashtags (name) VALUES ($1);`, [tag]);
+
+	return GetHashtag(tag);
+}
+
+async function CreatePostHashtags({ tags, postId }) {
 	for (const tag of tags) {
-		await db.query(
-			`INSERT INTO
-				"postHashtags"
-			("hashtagId", "postId")
-			VALUES ($1, $2);`,
-			[tag, post]
-		);
+		let hashtagId = (await GetHashtag(tag)).rows[0]?.id;
+
+		if (hashtagId) {
+			await db.query(
+				`INSERT INTO
+					"postHashtags"
+				("hashtagId", "postId")
+				VALUES ($1, $2);`,
+				[hashtagId, postId]
+			);
+		} else {
+			hashtagId = (await CreateHashtag(tag)).rows[0].id;
+
+			await db.query(
+				`INSERT INTO
+					"postHashtags"
+				("hashtagId", "postId")
+				VALUES ($1, $2);`,
+				[hashtagId, postId]
+			);
+		}
 	}
 }
 
@@ -25,7 +42,14 @@ async function CreatePost({ user, url, description, tags }) {
 		[user, url, description]
 	);
 
-	await CreatePostHashtags({ user, tags });
+	const postId = (
+		await db.query(
+			`SELECT id FROM posts WHERE "userId" = $1 ORDER BY id DESC;`,
+			[user]
+		)
+	).rows[0].id;
+
+	await CreatePostHashtags({ tags, postId });
 
 	return result;
 }
@@ -120,13 +144,21 @@ async function DeletePostLikes(id) {
 	return db.query(`DELETE FROM likes WHERE "postId" = $1;`, [id]);
 }
 
+async function DeletePostHashtags(postId) {
+	return db.query(`DELETE FROM "postHashtags" WHERE "postId" = $1;`, [postId]);
+}
+
 async function DeletePost(id) {
 	await DeletePostLikes(id);
+	await DeletePostHashtags(id);
 
 	return db.query(`DELETE FROM posts WHERE id = $1;`, [id]);
 }
 
-async function EditPost({ id, description }) {
+async function EditPost({ tags, id, description }) {
+	await DeletePostHashtags(id);
+	await CreatePostHashtags({ tags, postId: id });
+
 	return db.query(`UPDATE posts SET description = $1 WHERE id = $2;`, [
 		description,
 		id,
