@@ -121,7 +121,10 @@ async function ListPosts({ user }) {
 	const result = await db.query(
 		`SELECT 
 			posts.id, posts.url, posts.description, posts."userId",
-			users.username AS from, users.picture AS "userImage", users.id AS owner,
+			users.username AS from,
+			users.picture AS "userImage",
+			users.id AS owner,
+			users.id AS "userId",
 			"likesTotal".count AS "likesTotal",
 			"likesFromUser".count AS "likedByUser"
 		FROM posts
@@ -169,7 +172,10 @@ async function ListPostsWithHashtag({ user, hashtag }) {
 	const result = await db.query(
 		`SELECT 
 			posts.id, posts.url, posts.description,
-			users.username AS from, users.picture AS "userImage", users.id AS owner,
+			users.username AS from,
+			users.picture AS "userImage",
+			users.id AS owner,
+			users.id AS "userId",
 			"likesTotal".count AS "likesTotal",
 			"likesFromUser".count AS "likedByUser"
 		FROM posts
