@@ -7,8 +7,8 @@ async function CreateUser(email, passwordHash, username, picture) {
 	);
 }
 
-async function FindUser(email) {
-	return db.query(`SELECT * FROM users WHERE email = $1;`, [email]);
+async function FindUser(email, username) {
+	return db.query(`SELECT * FROM users WHERE email = $1 OR username = $2;`, [email, username]);
 }
 
 async function Login(token, userId) {

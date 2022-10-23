@@ -4,9 +4,10 @@ import jwt from "jsonwebtoken";
 
 export async function SignUp(req, res) {
 	const { email, password, username, picture } = req.body;
-	const { rows: user } = await authRepository.FindUser(email);
 
 	try {
+		const { rows: user } = await authRepository.FindUser(email, username);
+
 		if (user.length > 0) {
 			return res.status(409).send("Usuário já existe.");
 		}
