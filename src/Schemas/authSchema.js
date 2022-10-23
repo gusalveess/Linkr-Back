@@ -1,6 +1,6 @@
 import joi from "joi";
 
-const pattern = /(http(s?):)([/|.|\w|\s|-])*\.(?:jpg|gif|png)/;
+const pattern = /(http(s?):)(\/\/[^"']*\.(?:png|jpg|jpeg|gif|png|svg))/;
 
 const signUpSchema = joi.object({
 	email: joi.string().email().required(),
