@@ -120,7 +120,7 @@ async function GetLikedBy({ posts, user }) {
 async function ListPosts({ user }) {
 	const result = await db.query(
 		`SELECT 
-			posts.id, posts.url, posts.description,
+			posts.id, posts.url, posts.description, posts."userId",
 			users.username AS from, users.picture AS "userImage", users.id AS owner,
 			"likesTotal".count AS "likesTotal",
 			"likesFromUser".count AS "likedByUser"
