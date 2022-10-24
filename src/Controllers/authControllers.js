@@ -34,9 +34,9 @@ export async function SignIn(req, res) {
 			return res.status(401).send("Usuário incompátivel ou inexistente.");
 		}
 
-		const token = "abc"//jwt.sign({ user: user[0].id }, key);
+		const token = jwt.sign({ user: user[0].id }, key);
 
-		if (bcrypt.compareSync(password, user[0].password) == false) {
+		if (!bcrypt.compareSync(password, user[0].password)) {
 			return res.status(401).send("Usuário incompatível ou inexistente.");
 		}
 
