@@ -119,9 +119,7 @@ async function GetLikedBy({ posts, user }) {
 }
 
 async function ListPosts({ user }) {
-	const userfollowAnyone = await followsRepository.UserFollowAnyone(user);
-
-	if (Number(userfollowAnyone) === 0) return { rows: [{ followeds: 0 }] };
+	const followeds = await followsRepository.FollowedsByUser(user);
 
 	const result = await db.query(
 		`SELECT 
@@ -158,8 +156,7 @@ async function ListPosts({ user }) {
 			ON "likesFromUser".id = posts.id
 		LEFT JOIN follows
 			ON follows."followerId" = $1
-		WHERE follows."followerId" = users.id
-			OR follows."followedId" = users.id
+		WHERE users.id = $1
 		GROUP BY
 			posts.id,
 			users.username,
@@ -173,6 +170,12 @@ async function ListPosts({ user }) {
 	);
 
 	await GetLikedBy({ posts: result.rows, user });
+
+	if (result.rows.length === 0) {
+		result.rows[0] = { followeds };
+	} else {
+		result.rows[0].followeds = followeds;
+	}
 
 	return result;
 }

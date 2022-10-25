@@ -1,6 +1,6 @@
 import db from "../Database/database.js";
 
-async function UserFollowAnyone(user) {
+async function FollowedsByUser(user) {
 	const followeds = (
 		await db.query(
 			`SELECT 
@@ -14,4 +14,4 @@ async function UserFollowAnyone(user) {
 	return followeds;
 }
 
-export { UserFollowAnyone };
+export { FollowedsByUser };
