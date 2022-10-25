@@ -28,9 +28,13 @@ export async function Publish(req, res) {
 
 export async function ListPosts(req, res) {
 	const { user } = res.locals;
+	const { page } = req.query;
+
+	const currentPage = page * 10;
 
 	try {
-		const posts = (await postsRepository.ListPosts({ user })).rows;
+		const posts = (await postsRepository.ListPosts({ user, page: currentPage }))
+			.rows;
 
 		res.status(200).send(posts);
 	} catch (error) {
@@ -101,10 +105,17 @@ export async function EditPost(req, res) {
 export async function ListPostsWithHashtag(req, res) {
 	const { hashtag } = req.params;
 	const { user } = res.locals;
+	const { page } = req.query;
+
+	const currentPage = page * 10;
 
 	try {
 		const posts = (
-			await postsRepository.ListPostsWithHashtag({ user, hashtag })
+			await postsRepository.ListPostsWithHashtag({
+				user,
+				hashtag,
+				page: currentPage,
+			})
 		).rows;
 
 		res.status(200).send(posts);
