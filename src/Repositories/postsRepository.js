@@ -1,4 +1,5 @@
 import db from "../Database/database.js";
+import * as followsRepository from "../Repositories/followsRepository.js";
 
 async function GetHashtag(tag) {
 	return db.query(`SELECT id FROM hashtags WHERE name = $1;`, [tag]);
@@ -118,6 +119,10 @@ async function GetLikedBy({ posts, user }) {
 }
 
 async function ListPosts({ user }) {
+	const userfollowAnyone = await followsRepository.UserFollowAnyone(user);
+
+	if (Number(userfollowAnyone) === 0) return { rows: [{ followeds: 0 }] };
+
 	const result = await db.query(
 		`SELECT 
 			posts.id, posts.url, posts.description, posts."userId",
@@ -151,6 +156,10 @@ async function ListPosts({ user }) {
 				 GROUP BY posts.id, likes."byUserId"
 				) "likesFromUser"
 			ON "likesFromUser".id = posts.id
+		LEFT JOIN follows
+			ON follows."followerId" = $1
+		WHERE follows."followerId" = users.id
+			OR follows."followedId" = users.id
 		GROUP BY
 			posts.id,
 			users.username,
@@ -159,7 +168,7 @@ async function ListPosts({ user }) {
 			"likesFromUser".count,
 			owner
 		ORDER BY posts.id DESC
-		LIMIT 20;`,
+		LIMIT 10;`,
 		[user]
 	);
 
