@@ -118,7 +118,7 @@ async function GetLikedBy({ posts, user }) {
 	}
 }
 
-async function ListPosts({ user }) {
+async function ListPosts({ user, page }) {
 	const followeds = await followsRepository.FollowedsByUser(user);
 
 	const result = await db.query(
@@ -127,7 +127,6 @@ async function ListPosts({ user }) {
 			users.username AS from,
 			users.picture AS "userImage",
 			users.id AS owner,
-			users.id AS "userId",
 			"likesTotal".count AS "likesTotal",
 			"likesFromUser".count AS "likedByUser"
 		FROM posts
@@ -156,7 +155,8 @@ async function ListPosts({ user }) {
 			ON "likesFromUser".id = posts.id
 		LEFT JOIN follows
 			ON follows."followerId" = $1
-		WHERE users.id = $1
+		WHERE follows."followedId" = users.id
+			OR posts."userId" = $1
 		GROUP BY
 			posts.id,
 			users.username,
@@ -165,8 +165,9 @@ async function ListPosts({ user }) {
 			"likesFromUser".count,
 			owner
 		ORDER BY posts.id DESC
+		OFFSET $2
 		LIMIT 10;`,
-		[user]
+		[user, page]
 	);
 
 	await GetLikedBy({ posts: result.rows, user });
@@ -180,7 +181,7 @@ async function ListPosts({ user }) {
 	return result;
 }
 
-async function ListPostsWithHashtag({ user, hashtag }) {
+async function ListPostsWithHashtag({ user, hashtag, page }) {
 	const result = await db.query(
 		`SELECT 
 			posts.id, posts.url, posts.description,
@@ -226,8 +227,10 @@ async function ListPostsWithHashtag({ user, hashtag }) {
 			"likesTotal".count,
 			"likesFromUser".count,
 			owner
-		ORDER BY posts.id DESC;`,
-		[user, hashtag]
+		ORDER BY posts.id DESC
+		OFFSET $3
+		LIMIT 10;`,
+		[user, hashtag, page]
 	);
 
 	await GetLikedBy({ posts: result.rows, user });
