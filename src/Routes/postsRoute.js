@@ -7,11 +7,13 @@ import {
 	DeletePost,
 	EditPost,
 	ListPostsWithHashtag,
+	Repost,
 } from "../Controllers/postsController.js";
 
 const postsRouter = Router();
 
 postsRouter.post("/posts", schemaValidationMiddleware(postSchema), Publish);
+postsRouter.post("/posts/:id/share", Repost);
 
 postsRouter.get("/posts", ListPosts);
 postsRouter.get("/posts/:hashtag", ListPostsWithHashtag);

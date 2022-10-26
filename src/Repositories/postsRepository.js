@@ -84,6 +84,13 @@ async function EditPost({ tags, id, description }) {
 	]);
 }
 
+async function Repost({ id, user }) {
+	return db.query(
+		`INSERT INTO shareds ("postId", "byUserId") VALUES ($1, $2);`,
+		[id, user]
+	);
+}
+
 async function GetLikedBy({ posts, user }) {
 	for (let i = 0; i < posts.length; i++) {
 		const post = posts[i];
@@ -115,6 +122,7 @@ async function GetLikedBy({ posts, user }) {
 		post.likedByUser = !!post.likedByUser;
 		post.likedBy = likedBy;
 		post.owner = post.owner === user;
+		post.repostedByUser = post.repostedByUser === user;
 	}
 }
 
@@ -131,7 +139,8 @@ async function ListPosts({ user, page }) {
 			"likesFromUser".count AS "likedByUser",
 			"comments".count AS "comments",
 			"shareds".count AS "shareds",
-			"shareds"."repostedBy"
+			"shareds"."repostedBy",
+			"shareds"."byUserId" AS "repostedByUser"
 		FROM posts
 		JOIN users
 			ON posts."userId" = users.id
@@ -194,6 +203,7 @@ async function ListPosts({ user, page }) {
 			"comments",
 			"shareds",
 			"shareds"."repostedBy",
+			"repostedByUser",
 			owner
 		ORDER BY posts.id DESC
 		OFFSET $2
@@ -379,4 +389,5 @@ export {
 	EditPost,
 	ListPostsWithHashtag,
 	ListPostsAfterId,
+	Repost,
 };
