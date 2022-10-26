@@ -125,3 +125,23 @@ export async function ListPostsWithHashtag(req, res) {
 		res.sendStatus(500);
 	}
 }
+
+export async function Repost(req, res) {
+	const { id } = req.params;
+	const { user } = res.locals;
+
+	if (isNaN(id)) return res.sendStatus(400);
+
+	try {
+		const sharedPost = (await postsRepository.Repost({ id, user })).rowCount;
+
+		if (sharedPost === 0) {
+			return res.status(400).send("Não foi possível compartilhar o post.");
+		}
+
+		res.sendStatus(204);
+	} catch (error) {
+		console.log(error);
+		res.sendStatus(500);
+	}
+}
