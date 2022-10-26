@@ -128,7 +128,10 @@ async function ListPosts({ user, page }) {
 			users.picture AS "userImage",
 			users.id AS owner,
 			"likesTotal".count AS "likesTotal",
-			"likesFromUser".count AS "likedByUser"
+			"likesFromUser".count AS "likedByUser",
+			"comments".count AS "comments",
+			"shareds".count AS "shareds",
+			"shareds"."repostedBy"
 		FROM posts
 		JOIN users
 			ON posts."userId" = users.id
@@ -155,14 +158,42 @@ async function ListPosts({ user, page }) {
 			ON "likesFromUser".id = posts.id
 		LEFT JOIN follows
 			ON follows."followerId" = $1
+		LEFT JOIN
+				(SELECT 
+					COUNT("comments".id),
+				 	posts.id
+				FROM posts
+				LEFT JOIN "comments"
+					ON "comments"."postId" = posts.id
+				 GROUP BY posts.id
+				) "comments"
+			ON "comments".id = posts.id
+		LEFT JOIN
+				(SELECT 
+					COUNT("shareds".id),
+				 	posts.id,
+				 	users.username AS "repostedBy",
+				 	users.id AS "byUserId" 
+				FROM posts
+				LEFT JOIN "shareds"
+					ON "shareds"."postId" = posts.id
+				 LEFT JOIN users
+				 	ON shareds."byUserId" = users.id
+				 GROUP BY posts.id, users.username, users.id
+				) "shareds"
+			ON "shareds".id = posts.id
 		WHERE follows."followedId" = users.id
 			OR posts."userId" = $1
+			OR follows."followedId" = shareds."byUserId" 
 		GROUP BY
 			posts.id,
 			users.username,
 			"userImage",
 			"likesTotal".count,
 			"likesFromUser".count,
+			"comments",
+			"shareds",
+			"shareds"."repostedBy",
 			owner
 		ORDER BY posts.id DESC
 		OFFSET $2
@@ -189,7 +220,9 @@ async function ListPostsAfterId({ user, after }) {
 			users.picture AS "userImage",
 			users.id AS owner,
 			"likesTotal".count AS "likesTotal",
-			"likesFromUser".count AS "likedByUser"
+			"likesFromUser".count AS "likedByUser",
+			"comments".count AS "comments",
+			"shareds".count AS "shareds"
 		FROM posts
 		JOIN users
 			ON posts."userId" = users.id
@@ -216,6 +249,26 @@ async function ListPostsAfterId({ user, after }) {
 			ON "likesFromUser".id = posts.id
 		LEFT JOIN follows
 			ON follows."followerId" = $1
+		LEFT JOIN
+				(SELECT 
+					COUNT("comments".id),
+				 	posts.id
+				FROM posts
+				LEFT JOIN "comments"
+					ON "comments"."postId" = posts.id
+				 GROUP BY posts.id
+				) "comments"
+			ON "comments".id = posts.id
+		LEFT JOIN
+				(SELECT 
+					COUNT("shareds".id),
+				 	posts.id
+				FROM posts
+				LEFT JOIN "shareds"
+					ON "shareds"."postId" = posts.id
+				 GROUP BY posts.id
+				) "shareds"
+			ON "shareds".id = posts.id
 		WHERE (follows."followedId" = users.id
 			OR posts."userId" = $1)
 			AND posts.id > $2
@@ -225,6 +278,8 @@ async function ListPostsAfterId({ user, after }) {
 			"userImage",
 			"likesTotal".count,
 			"likesFromUser".count,
+			"comments",
+			"shareds",
 			owner
 		ORDER BY posts.id DESC;`,
 		[user, after]
@@ -244,7 +299,9 @@ async function ListPostsWithHashtag({ user, hashtag, page }) {
 			users.id AS owner,
 			users.id AS "userId",
 			"likesTotal".count AS "likesTotal",
-			"likesFromUser".count AS "likedByUser"
+			"likesFromUser".count AS "likedByUser",
+			"comments".count AS "comments",
+			"shareds".count AS "shareds"
 		FROM posts
 		JOIN users
 			ON posts."userId" = users.id
@@ -273,6 +330,26 @@ async function ListPostsWithHashtag({ user, hashtag, page }) {
 			ON posts.id = "postHashtags"."postId"
 		LEFT JOIN hashtags
 			ON hashtags.id = "postHashtags"."hashtagId"
+		LEFT JOIN
+				(SELECT 
+					COUNT("comments".id),
+				 	posts.id
+				FROM posts
+				LEFT JOIN "comments"
+					ON "comments"."postId" = posts.id
+				 GROUP BY posts.id
+				) "comments"
+			ON "comments".id = posts.id
+		LEFT JOIN
+				(SELECT 
+					COUNT("shareds".id),
+				 	posts.id
+				FROM posts
+				LEFT JOIN "shareds"
+					ON "shareds"."postId" = posts.id
+				 GROUP BY posts.id
+				) "shareds"
+			ON "shareds".id = posts.id
 		WHERE hashtags.name = $2
 		GROUP BY
 			posts.id,
@@ -280,6 +357,8 @@ async function ListPostsWithHashtag({ user, hashtag, page }) {
 			"userImage",
 			"likesTotal".count,
 			"likesFromUser".count,
+			"comments",
+			"shareds",
 			owner
 		ORDER BY posts.id DESC
 		OFFSET $3
