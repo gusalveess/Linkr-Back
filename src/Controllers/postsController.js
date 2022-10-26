@@ -28,13 +28,14 @@ export async function Publish(req, res) {
 
 export async function ListPosts(req, res) {
 	const { user } = res.locals;
-	const { page } = req.query;
+	const { page, after } = req.query;
 
 	const currentPage = page * 10;
 
 	try {
-		const posts = (await postsRepository.ListPosts({ user, page: currentPage }))
-			.rows;
+		const posts = after
+			? (await postsRepository.ListPostsAfterId({ user, after })).rows
+			: (await postsRepository.ListPosts({ user, page: currentPage })).rows;
 
 		res.status(200).send(posts);
 	} catch (error) {
