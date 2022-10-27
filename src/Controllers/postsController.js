@@ -145,3 +145,23 @@ export async function Repost(req, res) {
 		res.sendStatus(500);
 	}
 }
+
+export async function ToggleLike(req, res) {
+	const { id } = req.params;
+	const { user } = res.locals;
+
+	if (isNaN(id)) return res.sendStatus(400);
+
+	try {
+		const result = (await postsRepository.Like({ id, user })).rowCount;
+
+		if (result === 0) {
+			return res.status(400).send("Não foi possível realizar a ação.");
+		}
+
+		res.sendStatus(204);
+	} catch (error) {
+		console.log(error);
+		res.sendStatus(500);
+	}
+}

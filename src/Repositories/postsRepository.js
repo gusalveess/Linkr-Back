@@ -91,6 +91,35 @@ async function Repost({ id, user }) {
 	);
 }
 
+async function Unlike({ id, user }) {
+	return db.query(
+		`DELETE FROM likes WHERE "postId" = $1 AND "byUserId" = $2;`,
+		[id, user]
+	);
+}
+
+async function InsertLike({ id, user }) {
+	return db.query(`INSERT INTO likes ("postId", "byUserId") VALUES ($1, $2);`, [
+		id,
+		user,
+	]);
+}
+
+async function Like({ id, user }) {
+	const hasLike = (
+		await db.query(
+			`SELECT * FROM likes WHERE "postId" = $1 AND "byUserId" = $2;`,
+			[id, user]
+		)
+	).rows[0];
+
+	if (hasLike) {
+		return Unlike({ id, user });
+	}
+
+	return InsertLike({ id, user });
+}
+
 async function GetLikedBy({ posts, user }) {
 	for (let i = 0; i < posts.length; i++) {
 		const post = posts[i];
@@ -390,4 +419,5 @@ export {
 	ListPostsWithHashtag,
 	ListPostsAfterId,
 	Repost,
+	Like,
 };
