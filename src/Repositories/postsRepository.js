@@ -120,6 +120,13 @@ async function Like({ id, user }) {
 	return InsertLike({ id, user });
 }
 
+async function InsertComment({ id, user, comment }) {
+	return await db.query(
+		`INSERT INTO comments ("postId", "byUserId", comment) VALUES ($1, $2, $3);`,
+		[id, user, comment]
+	);
+}
+
 async function GetLikedBy({ posts, user }) {
 	for (let i = 0; i < posts.length; i++) {
 		const post = posts[i];
@@ -420,4 +427,5 @@ export {
 	ListPostsAfterId,
 	Repost,
 	Like,
+	InsertComment,
 };

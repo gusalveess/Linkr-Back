@@ -9,6 +9,7 @@ import {
 	ListPostsWithHashtag,
 	Repost,
 	ToggleLike,
+	InsertComment,
 } from "../Controllers/postsController.js";
 
 const postsRouter = Router();
@@ -16,6 +17,7 @@ const postsRouter = Router();
 postsRouter.post("/posts", schemaValidationMiddleware(postSchema), Publish);
 postsRouter.post("/posts/:id/share", Repost);
 postsRouter.post("/posts/:id/like", ToggleLike);
+postsRouter.post("/posts/:id/comment", InsertComment);
 
 postsRouter.get("/posts", ListPosts);
 postsRouter.get("/posts/:hashtag", ListPostsWithHashtag);
