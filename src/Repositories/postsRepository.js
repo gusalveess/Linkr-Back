@@ -1,5 +1,5 @@
 import db from "../Database/database.js";
-import * as followsRepository from "../Repositories/followsRepository.js";
+import * as usersRepository from "../Repositories/usersRepository.js";
 
 async function GetHashtag(tag) {
 	return db.query(`SELECT id FROM hashtags WHERE name = $1;`, [tag]);
@@ -156,7 +156,7 @@ async function GetLikedBy({ posts, user }) {
 }
 
 async function ListPosts({ user, page }) {
-	const followeds = await followsRepository.FollowedsByUser(user);
+	const followeds = await usersRepository.FollowedsByUser(user);
 
 	const result = await db.query(
 		`SELECT 
