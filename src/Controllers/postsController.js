@@ -165,3 +165,41 @@ export async function ToggleLike(req, res) {
 		res.sendStatus(500);
 	}
 }
+
+export async function InsertComment(req, res) {
+	const { id } = req.params;
+	const { comment } = req.body;
+	const { user } = res.locals;
+
+	if (isNaN(id) || !comment) return res.sendStatus(400);
+
+	try {
+		const result = (await postsRepository.InsertComment({ id, user, comment }))
+			.rowCount;
+
+		if (result === 0) {
+			return res.status(400).send("Não foi possível comentar o post.");
+		}
+
+		res.sendStatus(204);
+	} catch (error) {
+		console.log(error);
+		res.sendStatus(500);
+	}
+}
+
+export async function ListComments(req, res) {
+	const { id } = req.params;
+	const { user } = res.locals;
+
+	if (isNaN(id)) return res.sendStatus(400);
+
+	try {
+		const comments = (await postsRepository.ListComments({ id, user })).rows;
+
+		res.status(200).send(comments);
+	} catch (error) {
+		console.log(error);
+		res.sendStatus(500);
+	}
+}

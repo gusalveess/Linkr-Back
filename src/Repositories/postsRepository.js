@@ -67,9 +67,19 @@ async function DeletePostHashtags(postId) {
 	return db.query(`DELETE FROM "postHashtags" WHERE "postId" = $1;`, [postId]);
 }
 
+async function DeletePostComments(postId) {
+	return db.query(`DELETE FROM comments WHERE "postId" = $1;`, [postId]);
+}
+
+async function DeleteReposteds(postId) {
+	return db.query(`DELETE FROM shareds WHERE "postId" = $1;`, [postId]);
+}
+
 async function DeletePost(id) {
 	await DeletePostLikes(id);
 	await DeletePostHashtags(id);
+	await DeletePostComments(id);
+	await DeleteReposteds(id);
 
 	return db.query(`DELETE FROM posts WHERE id = $1;`, [id]);
 }
@@ -118,6 +128,46 @@ async function Like({ id, user }) {
 	}
 
 	return InsertLike({ id, user });
+}
+
+async function InsertComment({ id, user, comment }) {
+	return await db.query(
+		`INSERT INTO comments ("postId", "byUserId", comment) VALUES ($1, $2, $3);`,
+		[id, user, comment]
+	);
+}
+
+async function ListComments({ id, user }) {
+	return db.query(
+		`SELECT
+			users.username,
+			users.picture,
+			users.id AS "userId",
+			comments.comment,
+			author.username AS author,
+			"followedByUser".count AS "followedByUser"
+		FROM comments
+		JOIN posts
+			ON posts.id = comments."postId"
+		JOIN users
+			ON users.id = comments."byUserId"
+		JOIN users author
+			ON posts."userId" = author.id
+		LEFT JOIN
+				(SELECT 
+					COUNT(follows.id),
+					comments.id
+				FROM follows
+				 JOIN comments
+					ON comments."byUserId" = follows."followedId"
+				 WHERE follows."followerId" = $1
+				 GROUP BY comments.id
+				) "followedByUser"
+			ON "followedByUser".id = comments.id
+		WHERE posts.id = $2
+		ORDER BY comments.id ASC;`,
+		[user, id]
+	);
 }
 
 async function GetLikedBy({ posts, user }) {
@@ -420,4 +470,6 @@ export {
 	ListPostsAfterId,
 	Repost,
 	Like,
+	InsertComment,
+	ListComments,
 };

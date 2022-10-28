@@ -59,9 +59,9 @@ async function PostsFromUser({ id, page, user }) {
 			"shareds"."repostedBy",
 			"shareds"."byUserId" AS "repostedByUser",
 			"followedByUser".count AS "followedByUser"
-		FROM posts
-		JOIN users
-			ON posts."userId" = users.id
+		FROM users
+		LEFT JOIN posts
+			ON posts."userId" = $1
 		LEFT JOIN
 				(SELECT 
 					COUNT(likes."postId"),
