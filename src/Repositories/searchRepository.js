@@ -1,11 +1,26 @@
 import db from "../Database/database.js";
 
-async function search(id) {
+async function SearchUser({ user, search }) {
 	return db.query(
-		`SELECT users.username AS from, users.picture AS "userImage", posts.url,posts.description FROM users
-        JOIN posts ON users.id = posts."userId"
-        WHERE users.id = $1;`,
-		[id]
+		`SELECT 
+			users.username,
+			users.picture,
+			users.id AS "userId",
+			"followedByUser".count AS "followedByUser"
+		FROM users
+		LEFT JOIN
+				(SELECT 
+					COUNT(id),
+					"followerId",
+					"followedId"
+				FROM follows
+				WHERE "followerId" = $1
+				GROUP BY id
+				) "followedByUser"
+			ON "followedByUser"."followedId" = users.id
+		WHERE users.username ILIKE $2
+		ORDER BY "followedByUser";`,
+		[user, `${search}%`]
 	);
 }
 
@@ -144,4 +159,4 @@ async function PostsFromUser({ id, page, user }) {
 	return result;
 }
 
-export { PostsFromUser, search };
+export { PostsFromUser, SearchUser };

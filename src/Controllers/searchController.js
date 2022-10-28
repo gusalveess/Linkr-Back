@@ -1,16 +1,15 @@
 import * as searchUser from "../Repositories/searchRepository.js";
 
-async function searchId(req, res) {
-	const id = req.params.id;
+async function searchPeople(req, res) {
+	const { search } = req.query;
+	const { user } = res.locals;
+
+	if (!search) return res.sendStatus(400);
 
 	try {
-		const result = await searchUser.search(id);
+		const users = (await searchUser.SearchUser({ user, search })).rows;
 
-		if (result.rowCount === 0) {
-			return res.sendStatus(404);
-		}
-
-		res.send(result.rows);
+		res.status(200).send(users);
 	} catch (error) {
 		console.log(error);
 		return res.sendStatus(500);
@@ -38,4 +37,4 @@ async function listPostsFromUser(req, res) {
 	}
 }
 
-export { searchId, listPostsFromUser };
+export { searchPeople, listPostsFromUser };
