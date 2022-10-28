@@ -145,7 +145,7 @@ async function PostsFromUser({ id, page, user }) {
 }
 
 async function barSearch(name){
-	console.log(name + " é")
+	
 	
 	return db.query(
 		`SELECT users.username AS from, users.picture AS "userImage", users.id FROM users

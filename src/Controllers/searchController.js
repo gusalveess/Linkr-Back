@@ -38,4 +38,28 @@ async function listPostsFromUser(req, res) {
 	}
 }
 
-export { searchId, listPostsFromUser };
+async function searchInput(req,res){
+	const {name} = req.query
+	console.log(name.length)
+	
+	try{
+		
+			const result = await searchUser.barSearch(name)
+		if(name.length >= 3 && result.rowCount > 0){		
+			res.send(result.rows)
+		}
+		else{
+			return res.sendStatus(404);
+	}
+		
+	
+	}catch (error) {
+
+		console.log(error);
+		return res.sendStatus(500);
+	}
+}
+
+
+
+export { searchId, listPostsFromUser,searchInput  };
